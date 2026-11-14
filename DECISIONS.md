@@ -2,48 +2,53 @@
 
 ## Decision 1: Product Information Display
 
-**Problem:** Customers may find it difficult to compare food items when important product information is separated.
+**Problem:** Customers may find it difficult to compare food items when important product information is separated across different pages.
 
-**Decision:** Display food images, names, prices, descriptions, and dietary labels together in product cards.
+**Decision:** Display food images, names, prices, categories, descriptions, and vegetarian labels together in organized product cards.
 
 **Alternative:** Display only product names and prices in a simple list.
 
-**Reason:** Product cards allow customers to compare important information quickly.
+**Reason:** Product cards allow customers to view and compare important information quickly before selecting an item.
 
-**Tradeoff:** Product cards require more screen space, especially on mobile devices.
+**Trade-off:** Product cards require more screen space, especially on mobile devices.
 
-**Code Location:** `src/components/FoodCard.jsx` and `src/pages/Menu.jsx`
+**Code Location:** `src/App.jsx`, `src/data/food.js`, and `src/App.css`
 
-**Evidence:** Screenshot of the BiteBox menu page.
+**Evidence:** Screenshot of the BiteBox menu page showing product cards.
 
-## Decision 2: Shared Cart State
+---
 
-**Problem:** Customers may lose their selected items when moving between different pages.
+## Decision 2: Shared Cart State Using React Context
 
-**Decision:** Use React Context to maintain shared cart state across the application.
+**Problem:** Customers may lose their selected items or see inconsistent cart information when navigating between different pages.
 
-**Alternative:** Store cart state separately inside each page.
+**Decision:** Use React Context to maintain shared cart and inventory state across the application. Use localStorage to persist the cart and updated inventory after refreshing the browser.
 
-**Reason:** Shared state keeps the cart consistent across the menu, details, and cart pages.
+**Alternative:** Store cart and inventory state separately inside individual pages.
 
-**Tradeoff:** Context requires additional setup and careful state management.
+**Reason:** Shared state keeps cart information consistent throughout the application. LocalStorage allows saved cart selections and updated stock quantities to remain available after a page refresh.
 
-**Code Location:** `src/context/CartContext.jsx`
+**Trade-off:** Context requires additional setup and careful state management. LocalStorage only stores information in the current browser and does not provide shared server-side storage.
 
-**Evidence:** Screenshot showing an item added from the details page and retained in the cart page.
+**Code Location:** `src/context/CartContext.jsx`, `src/context/cart-context.js`, `src/context/useCart.js`, and `src/utils/cartUtils.js`
 
-## Decision 3: Dietary Information and Mobile Layout
+**Evidence:** Screenshots showing an item added to the cart, the same item retained after navigation, and updated inventory after refreshing the browser.
 
-**Problem:** Customers may have difficulty finding dietary information when selecting food items.
+---
 
-**Decision:** Display vegetarian labels directly on food cards and provide a vegetarian-only filter. Use a responsive layout that rearranges product cards on smaller screens.
+## Decision 3: Dietary Information and Responsive Design
 
-**Alternative:** Display dietary information only on a separate information page.
+**Problem:** Customers may have difficulty identifying suitable food items and using the website on smaller screens.
 
-**Reason:** Customers can identify suitable food items before opening their details pages.
+**Decision:** Display vegetarian labels with food items, provide a vegetarian-only order preference, and use responsive CSS to adjust the website layout for mobile devices.
 
-**Tradeoff:** Additional labels and filters require more interface space and responsive styling.
+**Alternative:** Display dietary information only on a separate page and use a fixed desktop layout.
 
-**Code Location:** `src/components/FoodCard.jsx`, `src/pages/Menu.jsx`, and `src/styles/global.css`
+**Reason:** Customers can identify suitable food items more easily, while responsive styling provides a better experience across different screen sizes.
 
-**Evidence:** Screenshots of the menu and mobile layout.
+**Trade-off:** Additional dietary labels and responsive layouts require extra interface space and CSS styling.
+
+**Code Location:** `src/App.jsx`, `src/data/food.js`, and `src/App.css`
+
+
+

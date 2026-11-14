@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import {
   BrowserRouter,
@@ -7,11 +7,12 @@ import {
   Route,
   Link,
   useParams,
-  useNavigate
+  useNavigate,
+  useLocation
 } from "react-router-dom";
 
-import foods from "./data/food.js";
-import { CartProvider, useCart } from "./context/CartContext.jsx";
+import { CartProvider } from "./context/CartContext.jsx";
+import { useCart } from "./context/useCart.js";
 import "./App.css";
 
 // Food images
@@ -42,9 +43,9 @@ function Navbar() {
   const { cartCount } = useCart();
 
   return (
-    <nav className="navbar">
-      <Link to="/" className="logo">
-        BiteBox 🍔
+    <nav className="navbar" aria-label="Main navigation">
+      <Link to="/" className="logo" aria-label="BiteBox home">
+        BiteBox <span aria-hidden="true">🍔</span>
       </Link>
 
       <div className="nav-links">
@@ -86,19 +87,19 @@ function Home() {
 
         <div className="feature-grid">
           <div className="feature-card">
-            <span>🍔</span>
+            <span aria-hidden="true">🍔</span>
             <h3>Fresh Food</h3>
             <p>Enjoy delicious food prepared fresh.</p>
           </div>
 
           <div className="feature-card">
-            <span>🚚</span>
+            <span aria-hidden="true">🚚</span>
             <h3>Convenient Ordering</h3>
             <p>Browse our menu and place your order easily.</p>
           </div>
 
           <div className="feature-card">
-            <span>💰</span>
+            <span aria-hidden="true">💰</span>
             <h3>Affordable Prices</h3>
             <p>Enjoy tasty meals at student-friendly prices.</p>
           </div>
@@ -114,14 +115,90 @@ function Menu() {
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("default");
 
-  const { addToCart } = useCart();
+  const {
+    addToCart,
+    foods: availableFoods
+  } = useCart();
+
+  const [menuFoods, setMenuFoods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Load menu data
+  const loadMenu = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      // Simulate an asynchronous request
+      const data = await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(availableFoods);
+        }, 700);
+      });
+
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid menu data");
+      }
+
+      setMenuFoods(data);
+    } catch {
+      setError("Unable to load the menu. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [availableFoods]);
+
+  // Load menu when page opens or stock changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadMenu();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [loadMenu]);
+
+  // Loading screen
+  if (loading) {
+    return (
+      <div
+        className="container"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <h1>Our Menu</h1>
+        <p>Loading delicious food... Please wait.</p>
+      </div>
+    );
+  }
+
+  // Error screen with Retry button
+  if (error) {
+    return (
+      <div className="container">
+        <h1>Oops! Something went wrong.</h1>
+
+        <p className="error-message" role="alert">
+          {error}
+        </p>
+
+        <button
+          type="button"
+          className="btn"
+          onClick={loadMenu}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   const categories = [
     "All",
-    ...new Set(foods.map((food) => food.category))
+    ...new Set(menuFoods.map((food) => food.category))
   ];
 
-  let filteredFoods = foods.filter((food) => {
+  let filteredFoods = menuFoods.filter((food) => {
     const matchesSearch = food.name
       .toLowerCase()
       .includes(search.toLowerCase());
@@ -183,8 +260,8 @@ function Menu() {
         </select>
       </div>
 
-      <p className="results-count">
-        Showing {filteredFoods.length} of {foods.length} products
+      <p className="results-count" aria-live="polite">
+        Showing {filteredFoods.length} of {menuFoods.length} products
       </p>
 
       {filteredFoods.length > 0 ? (
@@ -206,6 +283,10 @@ function Menu() {
                 <h3>{food.name}</h3>
                 <p>{food.description}</p>
 
+                <p>
+                  <strong>Available stock:</strong> {food.stock}
+                </p>
+
                 <div className="food-card-bottom">
                   <h4>Rs. {food.price}</h4>
 
@@ -218,10 +299,12 @@ function Menu() {
                 </div>
 
                 <button
+                  type="button"
                   className="btn add-cart-btn"
                   onClick={() => handleAddToCart(food.id)}
+                  disabled={food.stock === 0}
                 >
-                  Add to Cart
+                  {food.stock === 0 ? "Out of Stock" : "Add to Cart"}
                 </button>
               </div>
             </div>
@@ -233,6 +316,7 @@ function Menu() {
           <p>Try another search or select a different category.</p>
 
           <button
+            type="button"
             className="btn"
             onClick={() => {
               setSearch("");
@@ -251,7 +335,11 @@ function Menu() {
 // Food details page
 function FoodDetails() {
   const { id } = useParams();
-  const { addToCart } = useCart();
+
+  const {
+    addToCart,
+    foods
+  } = useCart();
 
   const food = foods.find(
     (item) => item.id === Number(id)
@@ -309,10 +397,12 @@ function FoodDetails() {
           </p>
 
           <button
+            type="button"
             className="btn add-cart-btn"
             onClick={handleAddToCart}
+            disabled={food.stock === 0}
           >
-            Add to Cart
+            {food.stock === 0 ? "Out of Stock" : "Add to Cart"}
           </button>
 
           <Link to="/menu" className="btn back-btn">
@@ -372,12 +462,16 @@ function Cart() {
                 <div className="cart-item-info">
                   <h3>{item.name}</h3>
                   <p>Rs. {item.price} each</p>
+
                   <p>
                     Item total: Rs. {item.price * item.quantity}
                   </p>
 
+                  <p>Available stock: {item.stock}</p>
+
                   <div className="quantity-controls">
                     <button
+                      type="button"
                       onClick={() =>
                         handleQuantityChange(
                           item.id,
@@ -392,6 +486,7 @@ function Cart() {
                     <strong>{item.quantity}</strong>
 
                     <button
+                      type="button"
                       onClick={() =>
                         handleQuantityChange(
                           item.id,
@@ -408,8 +503,10 @@ function Cart() {
                   </div>
 
                   <button
+                    type="button"
                     className="remove-btn"
                     onClick={() => removeFromCart(item.id)}
+                    aria-label={`Remove ${item.name} from cart`}
                   >
                     Remove
                   </button>
@@ -431,7 +528,7 @@ function Cart() {
             </label>
 
             {vegetarianOnly && hasNonVegetarianItems && (
-              <p className="error-message">
+              <p className="error-message" role="alert">
                 Your cart contains non-vegetarian items.
                 Remove them before checkout.
               </p>
@@ -519,25 +616,38 @@ function Checkout() {
       return;
     }
 
-    if (!customer.name.trim() || !customer.phone.trim() ||
-        !customer.address.trim() || !customer.sector) {
+    if (
+      !customer.name.trim() ||
+      !customer.phone.trim() ||
+      !customer.address.trim() ||
+      !customer.sector
+    ) {
       setError("Please complete all required fields.");
       return;
     }
 
     if (!/^03\d{9}$/.test(customer.phone.trim())) {
-      setError("Enter a valid Pakistani mobile number, e.g. 03001234567.");
+      setError(
+        "Enter a valid Pakistani mobile number, e.g. 03001234567."
+      );
       return;
     }
 
-    const order = placeOrder({
+    const result = placeOrder({
       ...customer,
       name: customer.name.trim(),
       phone: customer.phone.trim(),
       address: customer.address.trim()
     });
 
-    navigate("/confirmation", { state: { order } });
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+
+    navigate("/confirmation", {
+      state: { order: result.order }
+    });
   }
 
   if (cart.length === 0) {
@@ -565,6 +675,7 @@ function Checkout() {
             value={customer.name}
             onChange={handleChange}
             placeholder="Enter your full name"
+            autoComplete="name"
             required
           />
         </label>
@@ -579,6 +690,7 @@ function Checkout() {
             placeholder="03001234567"
             pattern="03[0-9]{9}"
             title="Enter a Pakistani mobile number starting with 03"
+            autoComplete="tel"
             required
           />
         </label>
@@ -590,6 +702,7 @@ function Checkout() {
             value={customer.address}
             onChange={handleChange}
             placeholder="House number, street and other details"
+            autoComplete="street-address"
             required
           />
         </label>
@@ -636,8 +749,9 @@ function Checkout() {
 // Order confirmation page
 function Confirmation() {
   const { lastOrder } = useCart();
-  const location = window.history.state;
-  const order = location?.usr?.order || lastOrder;
+
+  const location = useLocation();
+  const order = location.state?.order || lastOrder;
 
   if (!order) {
     return (

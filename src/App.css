@@ -602,3 +602,130 @@ a {
     margin-bottom: 10px;
   }
 }
+
+
+/* Additional responsive improvements */
+
+/* Tablets and smaller laptops */
+@media (max-width: 850px) {
+  .navbar {
+    padding: 16px 20px;
+  }
+
+  .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .details-image {
+    height: 320px;
+  }
+
+  .cart-item {
+    gap: 15px;
+  }
+}
+
+/* Mobile phones */
+@media (max-width: 550px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .navbar {
+    padding: 15px 10px;
+  }
+
+  .nav-links {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+  }
+
+  .nav-links a {
+    font-size: 14px;
+  }
+
+  .hero {
+    background-position: center;
+    padding: 30px 18px;
+  }
+
+  .hero h1 {
+    font-size: 30px;
+  }
+
+  .hero p {
+    font-size: 16px;
+  }
+
+  .home-features {
+    padding: 35px 15px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-heading h1 {
+    font-size: 27px;
+  }
+
+  .food-card-bottom {
+    align-items: flex-start;
+  }
+
+  .food-card-bottom .btn {
+    padding: 10px 12px;
+  }
+
+  .details-content h1 {
+    font-size: 25px;
+  }
+
+  .cart-item {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .quantity-controls {
+    gap: 12px;
+  }
+
+  .order-summary,
+  .checkout-summary {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .checkout-form {
+    width: 100%;
+  }
+
+  .confirmation-card {
+    width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .btn {
+    max-width: 100%;
+  }
+}
+
+
+/* Accessibility: visible keyboard focus */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #005fcc;
+  outline-offset: 3px;
+}
+
+/* Accessibility: buttons */
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
